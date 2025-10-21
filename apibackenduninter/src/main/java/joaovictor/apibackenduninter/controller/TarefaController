@@ -1,0 +1,66 @@
+package joaovictor.apibackenduninter.controller;
+
+import joaovictor.apibackenduninter.model.Tarefa;
+import joaovictor.apibackenduninter.repository.TarefaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/tarefas")
+public class TarefaController {
+
+    @Autowired
+    private TarefaRepository tarefaRepository;
+
+    // Criar uma nova tarefa
+    @PostMapping
+    public Tarefa criarTarefa(@RequestBody Tarefa tarefa) {
+        return tarefaRepository.save(tarefa);
+    }
+
+    // Consultar todas as tarefas
+    @GetMapping
+    public List<Tarefa> listarTarefas() {
+        return tarefaRepository.findAll();
+    }
+
+    // Consultar uma tarefa específica pelo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Tarefa> obterTarefaPorId(@PathVariable Long id) {
+        Optional<Tarefa> tarefa = tarefaRepository.findById(id);
+        return tarefa.map(ResponseEntity::ok)
+                     .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Atualizar uma tarefa existente
+    @PutMapping("/{id}")
+    public ResponseEntity<Tarefa> atualizarTarefa(@PathVariable Long id, @RequestBody Tarefa dadosAtualizados) {
+        Optional<Tarefa> tarefaExistente = tarefaRepository.findById(id);
+
+        if (tarefaExistente.isPresent()) {
+            Tarefa tarefa = tarefaExistente.get();
+            tarefa.setNome(dadosAtualizados.getNome());
+            tarefa.setDataEntrega(dadosAtualizados.getDataEntrega());
+            tarefa.setResponsavel(dadosAtualizados.getResponsavel());
+            tarefaRepository.save(tarefa);
+            return ResponseEntity.ok(tarefa);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Remover uma tarefa
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarTarefa(@PathVariable Long id) {
+        if (tarefaRepository.existsById(id)) {
+            tarefaRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}
